@@ -5,7 +5,38 @@
     android:background="@color/white"
     android:orientation="vertical">
 
+    <RelativeLayout
+        android:id="@+id/rlSearch"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/etSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/comfortaa_light"
+                android:textSize="@dimen/text_16s"
+                android:hint="@string/prompt_search"
+                android:imeActionLabel="@string/action_sign_in_short"
+                android:imeOptions="actionSearch"
+                android:inputType="textEmailAddress"
+
+                android:singleLine="true"
+                android:textColor="@color/clr_txt_black" />
+
+        </android.support.design.widget.TextInputLayout>
+
+
+
+    </RelativeLayout>
+
     <com.cjj.MaterialRefreshLayout
+        android:layout_below="@+id/rlSearch"
         android:id="@+id/materialRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">

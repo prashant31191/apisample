@@ -16,10 +16,10 @@ public class ArticlesModel implements Serializable {
     @SerializedName("title")
     public String title;
 
-    @SerializedName("description")
+    @SerializedName("description") // user for news list, chanel name,
     public String description;
 
-    @SerializedName("url")
+    @SerializedName("url") // user for news list, chanel name,
     public String url;
 
     @SerializedName("urlToImage")
@@ -27,5 +27,23 @@ public class ArticlesModel implements Serializable {
 
     @SerializedName("publishedAt")
     public String publishedAt;
+
+
+    //channnel list
+
+    @SerializedName("id")
+    public String id;
+
+    @SerializedName("name")
+    public String name;
+
+    @SerializedName("category")
+    public String category;
+
+    @SerializedName("language")
+    public String language;
+
+    @SerializedName("country")
+    public String country;
 
 }

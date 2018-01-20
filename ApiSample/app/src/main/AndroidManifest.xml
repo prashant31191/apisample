@@ -3,9 +3,14 @@
     package="com.azapps">
     <!-- To auto-complete the email text field in the login form with the user's emails -->
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!--required permission-->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!--optional permission - highly recommended-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-
+    <!--optional permission -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- External storage is used for pre-caching features if available -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:name=".App"
@@ -27,6 +32,20 @@
 
         <activity android:name=".recycler.ActNewsListing"
             android:label="@string/app_name"/>
+
+        <activity android:name=".recycler.ActNewsChannelsListing"
+            android:label="@string/app_name"/>
+
+
+        <activity android:name=".recycler.ActNewsDetail"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar"
+            />
+
+        <!--for the flury ads fullscreen-->
+        <activity
+            android:name="com.flurry.android.FlurryFullscreenTakeoverActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
 
         <meta-data
             android:name="preloaded_fonts"

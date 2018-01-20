@@ -8,9 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -40,13 +43,20 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class ActNewsListing extends AppCompatActivity {
+public class ActSearchNewsListing extends AppCompatActivity {
 
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
     @BindView(R.id.materialRefreshLayout)
     MaterialRefreshLayout materialRefreshLayout;
+
+
+    @BindView(R.id.rlSearch)
+    RelativeLayout rlSearch;
+
+    @BindView(R.id.etSearch)
+    EditText etSearch;
 
 
     @BindView(R.id.llNodata)
@@ -62,7 +72,7 @@ public class ActNewsListing extends AppCompatActivity {
     ArrayList<ArticlesModel> arrayListArticlesModel = new ArrayList<>();
 
 
-    String strFrom = "", strData = "", category_id = "";
+    String strFrom = "", strData = "", category_id = "",keyword = "bitcoin";
     int page = 1;
 
     @Override
@@ -72,7 +82,7 @@ public class ActNewsListing extends AppCompatActivity {
         ButterKnife.bind(this);
         getIntentData();
         initialization();
-        asyncGetNewsList();
+        asyncGetNewsList(keyword);
     }
 
 
@@ -114,7 +124,7 @@ public class ActNewsListing extends AppCompatActivity {
                 public void onRefresh(final MaterialRefreshLayout materialRefreshLayout) {
                     try {
                         arrayListArticlesModel = new ArrayList<>();
-                        asyncGetNewsList();
+                        asyncGetNewsList(keyword);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -124,10 +134,9 @@ public class ActNewsListing extends AppCompatActivity {
                 @Override
                 public void onRefreshLoadMore(MaterialRefreshLayout materialRefreshLayout) {
                     try {
-                       /* materialRefreshLayout.setLoadMore(false);
+                        materialRefreshLayout.setLoadMore(false);
                         App.setStopLoadingMaterialRefreshLayout(materialRefreshLayout);
-*/
-                        asyncGetNewsList();
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -140,20 +149,41 @@ public class ActNewsListing extends AppCompatActivity {
             recyclerView.setLayoutManager(linearLayoutManager);
             //recyclerView.setHasFixedSize(true);
 
+            etSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                    arrayListArticlesModel = new ArrayList<>();
+                    page = 1;
+
+                    asyncGetNewsList(""+s);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
-    private void asyncGetNewsList() {
+    private void asyncGetNewsList(String keyword) {
         try {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
 
 
             OkHttpClient httpClient = new OkHttpClient();
-            String url = "https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=462f5f3ede2841408e9ef575919befe5&page="+page;
+            String url = "https://newsapi.org/v2/everything?q="+keyword+"&apiKey=462f5f3ede2841408e9ef575919befe5&page="+page;
             Request request = new Request.Builder()
                     .url(url)
                     .build();
@@ -199,15 +229,14 @@ public class ActNewsListing extends AppCompatActivity {
                                     NewsHeadlinesResponse newsHeadlinesResponse = gson.fromJson(result.toString(), NewsHeadlinesResponse.class);
                                     App.setStopLoadingMaterialRefreshLayout(materialRefreshLayout);
                                     if (newsHeadlinesResponse != null && newsHeadlinesResponse.arrayListArticlesModel != null) {
-                                        //arrayListArticlesModel = newsHeadlinesResponse.arrayListArticlesModel;
-                                        if(page == 1){
+
+                                        if(page == 1)
+                                        {
                                             arrayListArticlesModel = newsHeadlinesResponse.arrayListArticlesModel;
                                         }
-                                        else
-                                        {
+                                        else {
                                             arrayListArticlesModel.addAll(newsHeadlinesResponse.arrayListArticlesModel);
                                         }
-
                                         page = page + 1;
                                         setStaticData();
                                     }
@@ -248,7 +277,7 @@ public class ActNewsListing extends AppCompatActivity {
                 App.showLog("======set adapter=DataListAdapter===");
 
                 if (dataListAdapter == null) {
-                    dataListAdapter = new DataListAdapter(ActNewsListing.this, arrayListArticlesModel);
+                    dataListAdapter = new DataListAdapter(ActSearchNewsListing.this, arrayListArticlesModel);
                     recyclerView.setAdapter(dataListAdapter);
                     recyclerView.setItemAnimator(new DefaultItemAnimator());
                 } else {
@@ -336,7 +365,7 @@ public class ActNewsListing extends AppCompatActivity {
                 versionViewHolder.rlMain.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent= new Intent(ActNewsListing.this,ActNewsDetail.class);
+                        Intent intent= new Intent(ActSearchNewsListing.this,ActNewsDetail.class);
                         intent.putExtra(AppFlags.tagArticlesModel,mArrListmPEArticleModel.get(i));
                         startActivity(intent);
                     }

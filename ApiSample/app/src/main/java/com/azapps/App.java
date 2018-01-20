@@ -23,8 +23,10 @@ import android.view.animation.Transformation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.TextView;
 
+import com.azapps.utils.AdsUtils;
 import com.azapps.utils.SharePrefrences;
 import com.cjj.MaterialRefreshLayout;
+import com.flurry.android.FlurryAgent;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -47,6 +49,7 @@ public class App extends Application
 
     // fullscreen
     public static boolean blnFullscreenActvitity = false;
+    public static String FlurryApiKey = "JYQHHN34N2H6P6KR48RD";
     public static String PREF_NAME = "alldemo_app";
     public static String DB_NAME = "alldemo.db";
    /* public static String DB_PATH = "/data/data/" + "com.alldemo" + "/databases/";*/
@@ -69,6 +72,20 @@ public class App extends Application
             MultiDex.install(this);
             mContext = getApplicationContext();
             sharePrefrences = new SharePrefrences(App.this);
+
+        /*    new FlurryAgent.Builder()
+                    .withLogEnabled(true)
+                    .withCaptureUncaughtExceptions(true)
+                    .withContinueSessionMillis(10)
+                    .withLogLevel(VERBOSE)
+                    .build(this, FLURRY_API_KEY);*/
+
+            new FlurryAgent.Builder()
+                    .withLogEnabled(true)
+                    .withCaptureUncaughtExceptions(true)
+                    .build(this, FlurryApiKey);
+
+            AdsUtils.initListener();
             createAppFolder();
 
         } catch (Exception e) {

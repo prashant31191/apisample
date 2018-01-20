@@ -9,4 +9,6 @@ public class AppFlags {
     public static String tagFrom = "from";
     public static String tagData = "data";
     public static String tagCatId = "cat_id";
+
+    public static String tagArticlesModel = "ArticlesModel";
 }

@@ -20,10 +20,13 @@ import android.widget.TextView;
 import com.azapps.App;
 import com.azapps.R;
 import com.azapps.recycler.newsapi.ArticlesModel;
-import com.azapps.recycler.newsapi.NewsHeadlinesResponse;
+import com.azapps.recycler.newsapi.NewsChannelsResponse;
+import com.azapps.utils.AdsUtils;
 import com.azapps.utils.AppFlags;
 import com.cjj.MaterialRefreshLayout;
 import com.cjj.MaterialRefreshListener;
+import com.flurry.android.FlurryAgent;
+import com.flurry.android.ads.FlurryAdInterstitial;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.squareup.picasso.Picasso;
@@ -40,7 +43,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class ActNewsListing extends AppCompatActivity {
+public class ActNewsChannelsListing extends AppCompatActivity {
 
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
@@ -64,15 +67,52 @@ public class ActNewsListing extends AppCompatActivity {
 
     String strFrom = "", strData = "", category_id = "";
     int page = 1;
+    FlurryAdInterstitial mFlurryAdInterstitial;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.act_news_listing);
-        ButterKnife.bind(this);
-        getIntentData();
-        initialization();
-        asyncGetNewsList();
+        try {
+            setContentView(R.layout.act_news_listing);
+            ButterKnife.bind(this);
+            getIntentData();
+            initialization();
+            asyncGetNewsList();
+
+
+
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    @Override
+    protected void onStart() {
+        FlurryAgent.onStartSession(this, App.FlurryApiKey);
+        // fetch and prepare ad for this ad space. won’t render one yet
+        mFlurryAdInterstitial = new FlurryAdInterstitial(this, AdsUtils.mAdSpaceName);
+        // allow us to get callbacks for ad events
+        mFlurryAdInterstitial.setListener(AdsUtils.interstitialAdListener);
+        mFlurryAdInterstitial.fetchAd();
+        super.onStart();
+    }
+
+
+    @Override
+    protected void onStop() {
+        FlurryAgent.onEndSession(this);
+        //do NOT call mFlurryAdInterstitial.destroy() here.
+        //it will destroy the object prematurely and prevent certain listener callbacks form fireing
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        mFlurryAdInterstitial.destroy();
+        super.onDestroy();
     }
 
 
@@ -124,10 +164,9 @@ public class ActNewsListing extends AppCompatActivity {
                 @Override
                 public void onRefreshLoadMore(MaterialRefreshLayout materialRefreshLayout) {
                     try {
-                       /* materialRefreshLayout.setLoadMore(false);
+                        materialRefreshLayout.setLoadMore(false);
                         App.setStopLoadingMaterialRefreshLayout(materialRefreshLayout);
-*/
-                        asyncGetNewsList();
+
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -153,7 +192,7 @@ public class ActNewsListing extends AppCompatActivity {
 
 
             OkHttpClient httpClient = new OkHttpClient();
-            String url = "https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=462f5f3ede2841408e9ef575919befe5&page="+page;
+            String url = "https://newsapi.org/v2/sources?apiKey=462f5f3ede2841408e9ef575919befe5&page="+page;
             Request request = new Request.Builder()
                     .url(url)
                     .build();
@@ -196,7 +235,7 @@ public class ActNewsListing extends AppCompatActivity {
                                     App.showLog("==result==" + result.toString());
 
                                     Gson gson = new GsonBuilder().create();
-                                    NewsHeadlinesResponse newsHeadlinesResponse = gson.fromJson(result.toString(), NewsHeadlinesResponse.class);
+                                    NewsChannelsResponse newsHeadlinesResponse = gson.fromJson(result.toString(), NewsChannelsResponse.class);
                                     App.setStopLoadingMaterialRefreshLayout(materialRefreshLayout);
                                     if (newsHeadlinesResponse != null && newsHeadlinesResponse.arrayListArticlesModel != null) {
                                         //arrayListArticlesModel = newsHeadlinesResponse.arrayListArticlesModel;
@@ -207,7 +246,6 @@ public class ActNewsListing extends AppCompatActivity {
                                         {
                                             arrayListArticlesModel.addAll(newsHeadlinesResponse.arrayListArticlesModel);
                                         }
-
                                         page = page + 1;
                                         setStaticData();
                                     }
@@ -248,7 +286,7 @@ public class ActNewsListing extends AppCompatActivity {
                 App.showLog("======set adapter=DataListAdapter===");
 
                 if (dataListAdapter == null) {
-                    dataListAdapter = new DataListAdapter(ActNewsListing.this, arrayListArticlesModel);
+                    dataListAdapter = new DataListAdapter(ActNewsChannelsListing.this, arrayListArticlesModel);
                     recyclerView.setAdapter(dataListAdapter);
                     recyclerView.setItemAnimator(new DefaultItemAnimator());
                 } else {
@@ -290,11 +328,11 @@ public class ActNewsListing extends AppCompatActivity {
             try {
                 ArticlesModel mPEArticleModel = mArrListmPEArticleModel.get(i);
 
-                versionViewHolder.tvTitle.setText(mPEArticleModel.title);
-                versionViewHolder.tvDate.setText(mPEArticleModel.publishedAt);
-                versionViewHolder.tvTime.setText(mPEArticleModel.author);
+                versionViewHolder.tvTitle.setText(mPEArticleModel.name);
+                versionViewHolder.tvDate.setText(mPEArticleModel.country);
+                versionViewHolder.tvTime.setText(mPEArticleModel.language);
 
-                versionViewHolder.tvDetail.setText(mPEArticleModel.description);
+                versionViewHolder.tvDetail.setText(mPEArticleModel.id + "\n "+mPEArticleModel.category);
 
                 if (mPEArticleModel.urlToImage != null && mPEArticleModel.urlToImage.length() > 1) {
                     versionViewHolder.ivPhoto.setVisibility(View.VISIBLE);
@@ -310,7 +348,7 @@ public class ActNewsListing extends AppCompatActivity {
                 } else {
                     versionViewHolder.ivPhoto.setVisibility(View.GONE);
                 }
-                if (mPEArticleModel.title.equalsIgnoreCase("1")) {
+                if (mPEArticleModel.name.equalsIgnoreCase("1")) {
                     versionViewHolder.ivFavourite.setSelected(true);
                 } else {
                     versionViewHolder.ivFavourite.setSelected(false);
@@ -320,13 +358,13 @@ public class ActNewsListing extends AppCompatActivity {
                 versionViewHolder.ivFavourite.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (mArrListmPEArticleModel.get(i).title.equalsIgnoreCase("1")) {
-                            mArrListmPEArticleModel.get(i).title = "0";
-                            if (mArrListmPEArticleModel.get(i) != null && mArrListmPEArticleModel.get(i).title != null) {
+                        if (mArrListmPEArticleModel.get(i).name.equalsIgnoreCase("1")) {
+                            mArrListmPEArticleModel.get(i).name = "0";
+                            if (mArrListmPEArticleModel.get(i) != null && mArrListmPEArticleModel.get(i).name != null) {
 
                             }
                         } else {
-                            mArrListmPEArticleModel.get(i).title = "1";
+                            mArrListmPEArticleModel.get(i).name = "1";
                         }
 
                         dataListAdapter.notifyDataSetChanged();
@@ -336,7 +374,7 @@ public class ActNewsListing extends AppCompatActivity {
                 versionViewHolder.rlMain.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent= new Intent(ActNewsListing.this,ActNewsDetail.class);
+                        Intent intent= new Intent(ActNewsChannelsListing.this,ActNewsDetail.class);
                         intent.putExtra(AppFlags.tagArticlesModel,mArrListmPEArticleModel.get(i));
                         startActivity(intent);
                     }
